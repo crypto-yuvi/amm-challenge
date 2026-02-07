@@ -1,0 +1,24 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python -m amm_competition.cli run:*)",
+      "Bash(pip install:*)",
+      "Bash(maturin develop:*)",
+      "Bash(python -m maturin develop:*)",
+      "Bash(forge build:*)",
+      "Bash(forge:*)",
+      "Bash(python -m amm_competition.cli:*)",
+      "Bash(where:*)",
+      "Bash(python -c:*)",
+      "Bash(rustup update:*)",
+      "Bash(\"C:\\\\Users\\\\User\\\\AppData\\\\Local\\\\Programs\\\\Python\\\\Python312\\\\python.exe\" -m maturin develop --release)",
+      "Bash(python -m venv:*)",
+      "Bash(.venvScriptsactivate)",
+      "Bash(\".venv\\\\Scripts\\\\python.exe\" -m pip install -e . maturin pyrevm)",
+      "Bash(\"c:\\\\Users\\\\User\\\\Documents\\\\GitHub\\\\amm-challenge\\\\.venv\\\\Scripts\\\\python.exe\" -m maturin develop --release)",
+      "Bash(\"c:\\\\Users\\\\User\\\\Documents\\\\GitHub\\\\amm-challenge\\\\.venv\\\\Scripts\\\\python.exe\" -c \"import sys; print\\(sys.executable\\); print\\(sys.base_executable\\)\":*)",
+      "Bash(\"c:\\\\Users\\\\User\\\\Documents\\\\GitHub\\\\amm-challenge\\\\.venv\\\\Scripts\\\\python.exe\" -c \"import sys; print\\(sys.executable\\); print\\(sys._base_executable\\)\")",
+      "Bash(\"C:\\\\Users\\\\User\\\\AppData\\\\Local\\\\Programs\\\\Python\\\\Python312\\\\python.exe\" --version)"
+    ]
+  }
+}
