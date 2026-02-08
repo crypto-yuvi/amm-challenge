@@ -18,7 +18,11 @@
       "Bash(\"c:\\\\Users\\\\User\\\\Documents\\\\GitHub\\\\amm-challenge\\\\.venv\\\\Scripts\\\\python.exe\" -m maturin develop --release)",
       "Bash(\"c:\\\\Users\\\\User\\\\Documents\\\\GitHub\\\\amm-challenge\\\\.venv\\\\Scripts\\\\python.exe\" -c \"import sys; print\\(sys.executable\\); print\\(sys.base_executable\\)\":*)",
       "Bash(\"c:\\\\Users\\\\User\\\\Documents\\\\GitHub\\\\amm-challenge\\\\.venv\\\\Scripts\\\\python.exe\" -c \"import sys; print\\(sys.executable\\); print\\(sys._base_executable\\)\")",
-      "Bash(\"C:\\\\Users\\\\User\\\\AppData\\\\Local\\\\Programs\\\\Python\\\\Python312\\\\python.exe\" --version)"
+      "Bash(\"C:\\\\Users\\\\User\\\\AppData\\\\Local\\\\Programs\\\\Python\\\\Python312\\\\python.exe\" --version)",
+      "Bash(.venvScriptspython.exe -m amm_competition.cli run contractssrcFeeStrategy1.sol --simulations 5)",
+      "Bash(c:/Users/User/Documents/GitHub/amm-challenge/.venv/Scripts/python.exe -m amm_competition.cli run:*)",
+      "Bash(c:/Users/User/Documents/GitHub/amm-challenge/.venv/Scripts/python.exe:*)",
+      "Bash(tasklist:*)"
     ]
   }
 }
