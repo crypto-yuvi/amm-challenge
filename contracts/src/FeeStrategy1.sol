@@ -4,10 +4,11 @@ pragma solidity ^0.8.24;
 import {AMMStrategyBase} from "./AMMStrategyBase.sol";
 import {IAMMStrategy, TradeInfo} from "./IAMMStrategy.sol";
 
-/// @title FeeStrategy1 - Direction-Dependent Alpha Quadratic Controller
-/// @notice Quadratic P-controller with asymmetric EMA update speed:
-///         when price moves AWAY from EMA (arb), alpha is high (fast tracking);
-///         when price moves TOWARD EMA (retail), alpha is low (stable reference).
+/// @title FeeStrategy1 - Dual-Alpha Size-Aware Quadratic Controller
+/// @notice Quadratic P-controller with trade-size-based mode switching:
+///         detects arb vs retail trades by amountY/reserveY ratio.
+///         After arb (large trade): slow alpha-away (don't chase corrected price).
+///         After retail (small trade): fast alpha-away (track new price quickly).
 ///         Correction: fee = BASE + KP1*err + KP2*err^2.
 contract Strategy is AMMStrategyBase {
     // ── Storage slot assignments ──────────────────────────────────────
@@ -17,11 +18,17 @@ contract Strategy is AMMStrategyBase {
     uint256 constant SLOT_PREV_YX = 3;  // Previous reserveY/reserveX
 
     // ── Tunable parameters ────────────────────────────────────────────
-    uint256 public constant BASE_FEE     = 30 * BPS;
-    uint256 public constant KP1          = 5656 * BPS;    // linear gain
-    uint256 public constant KP2          = 53806 * BPS;   // quadratic gain
-    uint256 public constant ALPHA_TOWARD = 1045e12;       // 0.001045 - slow when reverting
-    uint256 public constant ALPHA_AWAY   = 520e14;        // 0.052 - fast when deviating
+    uint256 public constant BASE_FEE     = 28 * BPS;
+    uint256 public constant KP1          = 6535 * BPS;    // linear gain
+    uint256 public constant KP2          = 34244 * BPS;   // quadratic gain
+    // Arb mode (large trade detected): slow tracking
+    uint256 public constant AT_ARB       = 1156e12;       // 0.001156
+    uint256 public constant AA_ARB       = 119e14;        // 0.0119
+    // Retail mode (small trade detected): fast tracking
+    uint256 public constant AT_RET       = 1150e12;       // 0.001150
+    uint256 public constant AA_RET       = 989e14;        // 0.0989
+    // Size threshold: amountY/reserveY > THRESH => arb
+    uint256 public constant THRESH       = 2705e12;       // 0.002705
 
     // ── Initialization ────────────────────────────────────────────────
     function afterInitialize(uint256 initialX, uint256 initialY)
@@ -43,17 +50,22 @@ contract Strategy is AMMStrategyBase {
         uint256 currentXY = wdiv(trade.reserveX, trade.reserveY);
         uint256 currentYX = wdiv(trade.reserveY, trade.reserveX);
 
-        uint256 bidFee = _controller(currentXY, SLOT_EMA_XY, SLOT_PREV_XY);
-        uint256 askFee = _controller(currentYX, SLOT_EMA_YX, SLOT_PREV_YX);
+        // Classify trade: large = arb (mode 1), small = retail (mode 0)
+        uint256 sizeRatio = wdiv(trade.amountY, trade.reserveY);
+        uint256 mode = sizeRatio > THRESH ? 1 : 0;
+
+        uint256 bidFee = _controller(currentXY, SLOT_EMA_XY, SLOT_PREV_XY, mode);
+        uint256 askFee = _controller(currentYX, SLOT_EMA_YX, SLOT_PREV_YX, mode);
 
         return (clampFee(bidFee), clampFee(askFee));
     }
 
-    // ── Direction-dependent alpha quadratic controller ─────────────────
+    // ── Size-aware dual-alpha quadratic controller ────────────────────
     function _controller(
         uint256 current,
         uint256 slotEma,
-        uint256 slotPrev
+        uint256 slotPrev,
+        uint256 mode
     ) internal returns (uint256) {
         uint256 ema = readSlot(slotEma);
         uint256 prev = readSlot(slotPrev);
@@ -62,7 +74,14 @@ contract Strategy is AMMStrategyBase {
         // Direction detection: is price moving toward or away from EMA?
         uint256 prevDist = ema >= prev ? ema - prev : prev - ema;
         uint256 currDist = ema >= current ? ema - current : current - ema;
-        uint256 alpha = currDist > prevDist ? ALPHA_AWAY : ALPHA_TOWARD;
+
+        // Select alpha based on mode (arb vs retail) and direction
+        uint256 alpha;
+        if (mode == 1) {
+            alpha = currDist > prevDist ? AA_ARB : AT_ARB;
+        } else {
+            alpha = currDist > prevDist ? AA_RET : AT_RET;
+        }
 
         uint256 newEma = wmul(alpha, current) + wmul(WAD - alpha, ema);
         writeSlot(slotEma, newEma);
